@@ -1,6 +1,6 @@
 _base_ = ["../../_base_/gdrn_base.py"]
 
-OUTPUT_DIR = "output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless"
+OUTPUT_DIR = "output/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_robi"
 INPUT = dict(
     DZI_PAD_SCALE=1.5,
     TRUNCATE_FG=True,
@@ -44,13 +44,12 @@ SOLVER = dict(
 )
 
 DATASETS = dict(
-    TRAIN=(
-        "tless_train_primesense",
-        "tless_train_pbr",
-    ),
-    TEST=("tless_bop_test_primesense",),
+    TRAIN=("robi_train",),
+    TEST=("robi_bop_test_primesense",),
     # AP        AP50    AP75    AR      inf.time
-    DET_FILES_TEST=("datasets/BOP_DATASETS/tless/test/test_bboxes/yolox_x_640_tless_real_pbr_tless_bop_test.json",),
+    DET_FILES_TEST=(
+        "datasets/BOP_DATASETS/robi/test/test_bboxes/yolox_x_640_robi_real_pbr_robi_bop_test.json",
+    ),
     DET_TOPK_PER_OBJ=100,
 )
 
@@ -131,7 +130,7 @@ MODEL = dict(
 
 
 VAL = dict(
-    DATASET_NAME="tless",
+    DATASET_NAME="robi",
     SCRIPT_PATH="lib/pysixd/scripts/eval_pose_results_more.py",
     TARGETS_FILENAME="test_targets_bop19.json",
     ERROR_TYPES="mspd,mssd,vsd,ad,reS,teS",
