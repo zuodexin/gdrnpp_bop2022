@@ -81,6 +81,7 @@ def load_json(path, keys_to_int=False):
     :param path: Path to the JSON file.
     :return: Content of the loaded JSON file.
     """
+
     # Keys to integers.
     def convert_keys_to_int(x):
         return {int(k) if k.lstrip("-").isdigit() else k: v for k, v in x.items()}
@@ -101,7 +102,6 @@ def save_json(path, content, sort=False):
     :param content: Dictionary/list to save.
     """
     with open(path, "w") as f:
-
         if isinstance(content, dict):
             f.write("{\n")
             if sort:
@@ -210,7 +210,9 @@ def load_cam_params(path):
 
     cam = {
         "im_size": (c["width"], c["height"]),
-        "K": np.array([[c["fx"], 0.0, c["cx"]], [0.0, c["fy"], c["cy"]], [0.0, 0.0, 1.0]]),
+        "K": np.array(
+            [[c["fx"], 0.0, c["cx"]], [0.0, c["fy"], c["cy"]], [0.0, 0.0, 1.0]]
+        ),
     }
 
     if "depth_scale" in c.keys():
@@ -231,11 +233,17 @@ def load_scene_camera(path):
 
     for im_id in scene_camera.keys():
         if "cam_K" in scene_camera[im_id].keys():
-            scene_camera[im_id]["cam_K"] = np.array(scene_camera[im_id]["cam_K"], np.float).reshape((3, 3))
+            scene_camera[im_id]["cam_K"] = np.array(
+                scene_camera[im_id]["cam_K"], np.float32
+            ).reshape((3, 3))
         if "cam_R_w2c" in scene_camera[im_id].keys():
-            scene_camera[im_id]["cam_R_w2c"] = np.array(scene_camera[im_id]["cam_R_w2c"], np.float).reshape((3, 3))
+            scene_camera[im_id]["cam_R_w2c"] = np.array(
+                scene_camera[im_id]["cam_R_w2c"], np.float32
+            ).reshape((3, 3))
         if "cam_t_w2c" in scene_camera[im_id].keys():
-            scene_camera[im_id]["cam_t_w2c"] = np.array(scene_camera[im_id]["cam_t_w2c"], np.float).reshape((3, 1))
+            scene_camera[im_id]["cam_t_w2c"] = np.array(
+                scene_camera[im_id]["cam_t_w2c"], np.float32
+            ).reshape((3, 1))
     return scene_camera
 
 
@@ -271,9 +279,9 @@ def load_scene_gt(path):
     for im_id, im_gt in scene_gt.items():
         for gt in im_gt:
             if "cam_R_m2c" in gt.keys():
-                gt["cam_R_m2c"] = np.array(gt["cam_R_m2c"], np.float).reshape((3, 3))
+                gt["cam_R_m2c"] = np.array(gt["cam_R_m2c"], np.float32).reshape((3, 3))
             if "cam_t_m2c" in gt.keys():
-                gt["cam_t_m2c"] = np.array(gt["cam_t_m2c"], np.float).reshape((3, 1))
+                gt["cam_t_m2c"] = np.array(gt["cam_t_m2c"], np.float32).reshape((3, 1))
     return scene_gt
 
 
@@ -318,15 +326,23 @@ def load_bop_results(path, version="bop19"):
                 else:
                     elems = line.split(",")
                     if len(elems) != 7:
-                        raise ValueError("A line does not have 7 comma-sep. elements: {}".format(line))
+                        raise ValueError(
+                            "A line does not have 7 comma-sep. elements: {}".format(
+                                line
+                            )
+                        )
                     # import pdb; pdb.set_trace();
                     result = {
                         "scene_id": int(elems[0]),
                         "im_id": int(elems[1]),
                         "obj_id": int(elems[2]),
                         "score": float(elems[3]),
-                        "R": np.array(list(map(float, elems[4].split())), np.float).reshape((3, 3)),
-                        "t": np.array(list(map(float, elems[5].split())), np.float).reshape((3, 1)),
+                        "R": np.array(
+                            list(map(float, elems[4].split())), np.float32
+                        ).reshape((3, 3)),
+                        "t": np.array(
+                            list(map(float, elems[5].split())), np.float32
+                        ).reshape((3, 1)),
                         "time": float(elems[6]),
                     }
 
@@ -394,7 +410,9 @@ def check_bop_results(path, version="bop19"):
                         check_passed = False
                         check_msg = (
                             "The running time for scene {} and image {} is not the same for"
-                            " all estimates.".format(result["scene_id"], result["im_id"])
+                            " all estimates.".format(
+                                result["scene_id"], result["im_id"]
+                            )
                         )
                         logger.info(check_msg)
                         break
@@ -520,7 +538,6 @@ def load_ply(path, vertex_scale=1.0):
 
     # Read the header.
     while True:
-
         # Strip the newline character(s)
         line = f.readline()
         if isinstance(line, str):
@@ -574,9 +591,9 @@ def load_ply(path, vertex_scale=1.0):
     model = {}
     if texture_file is not None:
         model["texture_file"] = texture_file
-    model["pts"] = np.zeros((n_pts, 3), np.float)
+    model["pts"] = np.zeros((n_pts, 3), np.float32)
     if n_faces > 0:
-        model["faces"] = np.zeros((n_faces, face_n_corners), np.float)
+        model["faces"] = np.zeros((n_faces, face_n_corners), np.float32)
 
     # print(pt_props)
     pt_props_names = [p[0] for p in pt_props]
@@ -586,22 +603,22 @@ def load_ply(path, vertex_scale=1.0):
     is_normal = False
     if {"nx", "ny", "nz"}.issubset(set(pt_props_names)):
         is_normal = True
-        model["normals"] = np.zeros((n_pts, 3), np.float)
+        model["normals"] = np.zeros((n_pts, 3), np.float32)
 
     is_color = False
     if {"red", "green", "blue"}.issubset(set(pt_props_names)):
         is_color = True
-        model["colors"] = np.zeros((n_pts, 3), np.float)
+        model["colors"] = np.zeros((n_pts, 3), np.float32)
 
     is_texture_pt = False
     if {"texture_u", "texture_v"}.issubset(set(pt_props_names)):
         is_texture_pt = True
-        model["texture_uv"] = np.zeros((n_pts, 2), np.float)
+        model["texture_uv"] = np.zeros((n_pts, 2), np.float32)
 
     is_texture_face = False
     if {"texcoord"}.issubset(set(face_props_names)):
         is_texture_face = True
-        model["texture_uv_face"] = np.zeros((n_faces, 6), np.float)
+        model["texture_uv_face"] = np.zeros((n_faces, 6), np.float32)
 
     # Formats for the binary case.
     formats = {
@@ -693,7 +710,9 @@ def load_ply(path, vertex_scale=1.0):
 
         if is_texture_face:
             for i in range(6):
-                model["texture_uv_face"][face_id, i] = float(prop_vals["texcoord_ind_{}".format(i)])
+                model["texture_uv_face"][face_id, i] = float(
+                    prop_vals["texcoord_ind_{}".format(i)]
+                )
 
     f.close()
     model["pts"] *= vertex_scale
@@ -720,7 +739,9 @@ def save_ply(path, model, extra_header_comments=None):
     pts_normals = model["normals"] if "normals" in model.keys() else None
     faces = model["faces"] if "faces" in model.keys() else None
     texture_uv = model["texture_uv"] if "texture_uv" in model.keys() else None
-    texture_uv_face = model["texture_uv_face"] if "texture_uv_face" in model.keys() else None
+    texture_uv_face = (
+        model["texture_uv_face"] if "texture_uv_face" in model.keys() else None
+    )
     texture_file = model["texture_file"] if "texture_file" in model.keys() else None
 
     save_ply2(
@@ -786,7 +807,10 @@ def save_ply2(
             f.write("comment {}\n".format(comment))
 
     f.write(
-        "element vertex " + str(valid_pts_count) + "\n" "property float x\n" "property float y\n" "property float z\n"
+        "element vertex " + str(valid_pts_count) + "\n"
+        "property float x\n"
+        "property float y\n"
+        "property float z\n"
     )
     if pts_normals is not None:
         f.write("property float nx\n" "property float ny\n" "property float nz\n")
@@ -795,7 +819,10 @@ def save_ply2(
     if texture_uv is not None:
         f.write("property float texture_u\n" "property float texture_v\n")
     if faces is not None:
-        f.write("element face " + str(len(faces)) + "\n" "property list uchar int vertex_indices\n")
+        f.write(
+            "element face " + str(len(faces)) + "\n"
+            "property list uchar int vertex_indices\n"
+        )
     if texture_uv_face is not None:
         f.write("property list uchar float texcoord\n")
     f.write("end_header\n")
@@ -827,7 +854,9 @@ def save_ply2(
             line = " ".join(map(str, map(int, [len(face)] + list(face.squeeze()))))
             if texture_uv_face is not None:
                 uv = texture_uv_face[face_id]
-                line += " " + " ".join(map(str, [len(uv)] + map(float, list(uv.squeeze()))))
+                line += " " + " ".join(
+                    map(str, [len(uv)] + map(float, list(uv.squeeze())))
+                )
             f.write(line)
             f.write("\n")
 
@@ -874,7 +903,10 @@ def save_ply_float_color(
     if pts_colors.size != 0:
         f.write("property float red\n" "property float green\n" "property float blue\n")
     if faces.size != 0:
-        f.write("element face " + str(len(faces)) + "\n" "property list uchar int vertex_indices\n")
+        f.write(
+            "element face " + str(len(faces)) + "\n"
+            "property list uchar int vertex_indices\n"
+        )
     f.write("end_header\n")
 
     format_float = "{:.4f}"

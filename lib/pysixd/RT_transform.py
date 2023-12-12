@@ -17,7 +17,9 @@ from .se3 import se3_inverse, se3_mul
 from lib.utils import logger
 
 
-def calc_RT_delta(pose_src, pose_tgt, T_means, T_stds, rot_coord="MODEL", rot_type="MATRIX"):
+def calc_RT_delta(
+    pose_src, pose_tgt, T_means, T_stds, rot_coord="MODEL", rot_type="MATRIX"
+):
     """project the points in source corrd to target corrd.
 
     :param pose_src: pose matrix of soucre, [R|T], 3x4
@@ -33,7 +35,9 @@ def calc_RT_delta(pose_src, pose_tgt, T_means, T_stds, rot_coord="MODEL", rot_ty
         T_delta = se3_src2tgt[:, 3].reshape(3)
     else:
         Rm_delta = R_inv_transform(pose_src[:3, :3], pose_tgt[:3, :3], rot_coord)
-        T_delta = T_inv_transform(pose_src[:, 3], pose_tgt[:, 3], T_means, T_stds, rot_coord)
+        T_delta = T_inv_transform(
+            pose_src[:, 3], pose_tgt[:, 3], T_means, T_stds, rot_coord
+        )
 
     if rot_type.lower() == "quat":
         r = mat2quat(Rm_delta)
@@ -58,7 +62,11 @@ def R_transform(R_src, R_delta, rot_coord="MODEL"):
     """
     if rot_coord.lower() == "model":
         R_output = np.dot(R_src, R_delta)
-    elif rot_coord.lower() == "camera" or rot_coord.lower() == "naive" or rot_coord.lower() == "camera_new":
+    elif (
+        rot_coord.lower() == "camera"
+        or rot_coord.lower() == "naive"
+        or rot_coord.lower() == "camera_new"
+    ):
         R_output = np.dot(R_delta, R_src)
     else:
         raise Exception("Unknown rot_coord in R_transform: {}".format(rot_coord))
@@ -153,7 +161,9 @@ def RT_transform(pose_src, r, t, T_means, T_stds, rot_coord="MODEL"):
     else:
         pose_est = np.zeros((3, 4))
         pose_est[:3, :3] = R_transform(pose_src[:3, :3], Rm_delta, rot_coord)
-        pose_est[:3, 3] = T_transform(pose_src[:, 3], t_delta, T_means, T_stds, rot_coord)
+        pose_est[:3, 3] = T_transform(
+            pose_src[:, 3], t_delta, T_means, T_stds, rot_coord
+        )
 
     return pose_est
 
@@ -246,7 +256,9 @@ def allocentric_to_egocentric(allo_pose, src_type="mat", dst_type="mat"):
     return ego_pose
 
 
-def egocentric_to_allocentric(ego_pose, src_type="mat", dst_type="mat", cam_ray=(0, 0, 1.0)):
+def egocentric_to_allocentric(
+    ego_pose, src_type="mat", dst_type="mat", cam_ray=(0, 0, 1.0)
+):
     # Compute rotation between ray to object centroid and optical center ray
     cam_ray = np.asarray(cam_ray)
     if src_type == "mat":
@@ -295,8 +307,8 @@ def egocentric_to_allocentric(ego_pose, src_type="mat", dst_type="mat", cam_ray=
 # For testing whether a number is close to zero
 _EPS4 = np.finfo(float).eps * 4.0
 
-_MAX_FLOAT = np.maximum_sctype(np.float)
-_FLOAT_EPS = np.finfo(np.float).eps
+_MAX_FLOAT = np.maximum_sctype(np.float32)
+_FLOAT_EPS = np.finfo(np.float32).eps
 
 
 def my_mat2quat(mat, dtype=None):
@@ -455,7 +467,9 @@ def test_ego_allo():
     rot_types = ["mat", "quat"]
     for src_type in rot_types:
         for dst_type in rot_types:
-            allo_pose = egocentric_to_allocentric(ego_poses[src_type], src_type, dst_type)
+            allo_pose = egocentric_to_allocentric(
+                ego_poses[src_type], src_type, dst_type
+            )
             ego_pose_1 = allocentric_to_egocentric(allo_pose, dst_type, src_type)
             print(src_type, dst_type)
             print("ego_pose: ", ego_poses[src_type])
@@ -485,7 +499,9 @@ def test_ego_to_allo_v2():
                 rot_type=src_type,
             )
             ego_pose_1_v2 = allocentric_to_egocentric(
-                np.concatenate([allo_pose_v2[0], allo_pose_v2[1].reshape(3, 1)], axis=1),
+                np.concatenate(
+                    [allo_pose_v2[0], allo_pose_v2[1].reshape(3, 1)], axis=1
+                ),
                 dst_type,
                 src_type,
             )
@@ -495,7 +511,9 @@ def test_ego_to_allo_v2():
                 ego_poses[src_type][4:7],
                 rot_type=src_type,
             )
-            ego_pose_1_v2 = allocentric_to_egocentric(np.concatenate(allo_pose_v2, axis=0), dst_type, src_type)
+            ego_pose_1_v2 = allocentric_to_egocentric(
+                np.concatenate(allo_pose_v2, axis=0), dst_type, src_type
+            )
 
         print(src_type, dst_type)
         print("ego_pose: ", ego_poses[src_type])
