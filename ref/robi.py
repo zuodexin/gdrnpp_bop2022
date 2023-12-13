@@ -21,7 +21,7 @@ bop_root = osp.join(data_root, "ROBI/bop")
 # ---------------------------------------------------------------- #
 dataset_root = osp.join(bop_root, "robi_20000")
 train_render_dir = osp.join(dataset_root, "train")
-test_dir = osp.join(dataset_root, "test")
+test_dir = osp.join(bop_root, "robi_10000", "test")
 
 # model_dir = osp.join(dataset_root, "models_reconst")  # use recon models as default
 model_dir = osp.join(dataset_root, "models")
@@ -44,8 +44,8 @@ model_colors = [
 # Camera info
 tr_render_width = 1280
 tr_render_height = 1024
-width = te_width = 720  # pbr size
-height = te_height = 540  # pbr size
+width = te_width = 1280  # pbr size
+height = te_height = 1024  # pbr size
 zNear = 0.25
 zFar = 6.0
 tr_render_center = (tr_render_height / 2, tr_render_width / 2)
@@ -70,7 +70,7 @@ def get_models_info():
     return models_info
 
 
-# ref core/gdrn_modeling/tools/tless/tless_1_compute_fps.py
+# ref core/gdrn_modeling/tools/robi/robi_1_compute_fps.py
 def get_fps_points():
     fps_points_path = osp.join(model_dir, "fps_points.pkl")
     assert osp.exists(fps_points_path), fps_points_path
@@ -78,7 +78,7 @@ def get_fps_points():
     return fps_dict
 
 
-# ref core/gdrn_modeling/tools/tless/tless_1_compute_keypoints_3d.py
+# ref core/gdrn_modeling/tools/robi/robi_1_compute_keypoints_3d.py
 def get_keypoints_3d():
     keypoints_3d_path = osp.join(model_dir, "keypoints_3d.pkl")
     assert osp.exists(keypoints_3d_path), keypoints_3d_path
