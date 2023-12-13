@@ -27,6 +27,8 @@ from core.gdrn_modeling.datasets import (
     itodd_pbr,
     itodd_bop_test,
     itodd_d2,
+    robi_pbr,
+    robi_test,
 )
 
 
@@ -58,6 +60,8 @@ _DSET_MOD_NAMES = [
     "itodd_pbr",
     "itodd_bop_test",
     "itodd_d2",
+    "robi_pbr",
+    "robi_test",
 ]
 
 logger = logging.getLogger(__name__)
@@ -104,7 +108,9 @@ def register_datasets_in_cfg(cfg):
                 """load data_cfg and mod_name from file
                 cfg.DATA_CFG[name] = 'path_to_cfg'
                 """
-                assert "DATA_CFG" in cfg and name in cfg.DATA_CFG, "no cfg.DATA_CFG.{}".format(name)
+                assert (
+                    "DATA_CFG" in cfg and name in cfg.DATA_CFG
+                ), "no cfg.DATA_CFG.{}".format(name)
                 assert osp.exists(cfg.DATA_CFG[name])
                 data_cfg = mmcv.load(cfg.DATA_CFG[name])
                 mod_name = data_cfg.pop("mod_name", None)

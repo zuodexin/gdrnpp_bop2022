@@ -44,11 +44,11 @@ SOLVER = dict(
 )
 
 DATASETS = dict(
-    TRAIN=("robi_train",),
-    TEST=("robi_bop_test_primesense",),
+    TRAIN=("robi_pbr_train",),
+    TEST=("robi_test",),
     # AP        AP50    AP75    AR      inf.time
     DET_FILES_TEST=(
-        "datasets/BOP_DATASETS/robi/test/test_bboxes/yolox_x_640_robi_real_pbr_robi_bop_test.json",
+        "./output/yolox/bop_pbr/yolox_x_640_augCozyAAEhsv_ranger_30_epochs_robi_pbr_robi_bop_test/inference/robi_test/coco_instances_results_bop.json",
     ),
     DET_TOPK_PER_OBJ=100,
 )
