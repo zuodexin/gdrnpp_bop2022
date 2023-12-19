@@ -50,7 +50,9 @@ DATASETS = dict(
     ),
     TEST=("tless_bop_test_primesense",),
     # AP        AP50    AP75    AR      inf.time
-    DET_FILES_TEST=("datasets/BOP_DATASETS/tless/test/test_bboxes/yolox_x_640_tless_real_pbr_tless_bop_test.json",),
+    DET_FILES_TEST=(
+        "../data/BOP/GDRNPP_test_bbox/tless/test/test_bboxes/yolox_x_640_tless_real_pbr_tless_bop_test.json",
+    ),
     DET_TOPK_PER_OBJ=100,
 )
 
@@ -146,4 +148,6 @@ VAL = dict(
     USE_BOP=True,  # whether to use bop toolkit
 )
 
-TEST = dict(EVAL_PERIOD=0, VIS=False, TEST_BBOX_TYPE="est")  # gt | est
+TEST = dict(
+    EVAL_PERIOD=0, VIS=True, TEST_BBOX_TYPE="est", SAVE_RESULTS_ONLY=True
+)  # gt | est

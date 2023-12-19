@@ -1082,6 +1082,13 @@ def gdrn_save_result_of_dataset(cfg, model, data_loader, output_dir, dataset_nam
 
                         im_gt_pred = visualizer.get_output().get_image()
                         vis_dict["zoom_im_gt_pred"] = im_gt_pred
+                        
+                        vis_dict["coor"] = torch.concat([
+                            out_dict["coor_x"][i_out],
+                            out_dict["coor_y"][i_out],
+                            out_dict["coor_z"][i_out],
+                        ], 0).permute(1,2,0).detach().cpu().numpy()
+                            
 
                         show_titles = [_k for _k, _v in vis_dict.items()]
                         show_ims = [_v for _k, _v in vis_dict.items()]
