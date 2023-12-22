@@ -181,7 +181,7 @@ for result_filename in p["result_filenames"]:
     ]:
         misc.log("Loading object models...")
         for obj_id in dp_model["obj_ids"]:
-            models[obj_id] = inout.load_ply(dp_model["model_tpath"].format(obj_id=obj_id))
+            models[obj_id] = inout.load_ply_bop(dp_model["model_tpath"].format(obj_id=obj_id))
 
     # Load models info.
     models_info = None

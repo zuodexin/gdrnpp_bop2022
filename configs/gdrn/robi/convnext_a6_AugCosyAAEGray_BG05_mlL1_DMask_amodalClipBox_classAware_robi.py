@@ -48,7 +48,7 @@ DATASETS = dict(
     TEST=("robi_test",),
     # AP        AP50    AP75    AR      inf.time
     DET_FILES_TEST=(
-        "./output/yolox/bop_pbr/yolox_x_640_augCozyAAEhsv_ranger_30_epochs_robi_pbr_robi_bop_test/inference/robi_test/coco_instances_results_bop.json",
+        "../data/ROBI/bop/robi_10000/gpose_detections/robi_10000-test-ddetr_2045-bbox.json",
     ),
     DET_TOPK_PER_OBJ=100,
 )
@@ -138,7 +138,7 @@ VAL = dict(
     SPLIT="test",
     SPLIT_TYPE="",
     N_TOP=-1,  # SISO: 1, VIVO: -1 (for LINEMOD, 1/-1 are the same)
-    EVAL_CACHED=False,  # if the predicted poses have been saved
+    EVAL_CACHED=True,  # if the predicted poses have been saved
     SCORE_ONLY=False,  # if the errors have been calculated
     EVAL_PRINT_ONLY=False,  # if the scores/recalls have been saved
     EVAL_PRECISION=False,  # use precision or recall
