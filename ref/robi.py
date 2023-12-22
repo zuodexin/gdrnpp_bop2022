@@ -14,12 +14,12 @@ output_dir = osp.join(
     root_dir, "output"
 )  # directory storing experiment data (result, model checkpoints, etc).
 
-data_root = osp.join(root_dir, "../data")
-bop_root = osp.join(data_root, "ROBI/bop")
+data_root = osp.join(root_dir, "../data/ROBI")
+bop_root = osp.join(data_root, "bop")
 # ---------------------------------------------------------------- #
 # TLESS DATASET
 # ---------------------------------------------------------------- #
-dataset_root = osp.join(bop_root, "robi_20000")
+dataset_root = osp.join(bop_root, "robi_10000")
 train_render_dir = osp.join(dataset_root, "train")
 test_dir = osp.join(bop_root, "robi_10000", "test")
 
@@ -29,8 +29,8 @@ model_cad = osp.join(dataset_root, "models")
 model_eval_dir = osp.join(dataset_root, "models_eval")
 vertex_scale = 0.001
 # object info
-objects = [str(i) for i in range(1, 7)]
-id2obj = {i: str(i) for i in range(1, 7)}
+objects = [str(i) for i in range(1, 8)]
+id2obj = {i: str(i) for i in range(1, 8)}
 
 obj_num = len(id2obj)
 obj2id = {_name: _id for _id, _name in id2obj.items()}

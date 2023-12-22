@@ -291,7 +291,7 @@ class ROBI_TEST_Dataset(object):
 
         models = []
         for obj_name in self.objs:
-            model = inout.load_ply(
+            model = inout.load_ply_bop(
                 osp.join(self.models_root, f"obj_{ref.robi.obj2id[obj_name]:06d}.ply"),
                 vertex_scale=self.scale_to_meter,
             )

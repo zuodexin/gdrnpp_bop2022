@@ -59,7 +59,7 @@ class GDRN_Evaluator(DatasetEvaluator):
             osp.join(self.data_ref.model_eval_dir, "obj_{:06d}.ply".format(obj_id)) for obj_id in self.obj_ids
         ]
         self.models_3d = [
-            inout.load_ply(model_path, vertex_scale=self.data_ref.vertex_scale) for model_path in self.model_paths
+            inout.load_ply_bop(model_path, vertex_scale=self.data_ref.vertex_scale) for model_path in self.model_paths
         ]
         if cfg.DEBUG or cfg.TEST.USE_DEPTH_REFINE:
             from lib.render_vispy.model3d import load_models
@@ -855,7 +855,7 @@ def gdrn_save_result_of_dataset(cfg, model, data_loader, output_dir, dataset_nam
         from core.utils.data_utils import crop_resize_by_warp_affine
 
         obj_models = {
-            data_ref.obj2id[_obj_name]: inout.load_ply(m_path, vertex_scale=data_ref.vertex_scale)
+            data_ref.obj2id[_obj_name]: inout.load_ply_bop(m_path, vertex_scale=data_ref.vertex_scale)
             for _obj_name, m_path in zip(data_ref.objects, data_ref.model_paths)
         }
         # key is [str(obj_id)]["bbox3d_and_center"]
