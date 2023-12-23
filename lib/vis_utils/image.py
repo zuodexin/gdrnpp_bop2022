@@ -12,6 +12,9 @@ import numpy as np
 from matplotlib.patches import Polygon
 from mmcv import color_val
 from mmcv.image import imread, imwrite
+from PIL import Image
+from io import BytesIO
+
 
 cur_dir = osp.dirname(osp.abspath(__file__))
 sys.path.insert(0, osp.join(cur_dir, "../.."))
@@ -64,8 +67,12 @@ def grid_show(ims, titles=None, row=1, col=3, dpi=200, save_path=None, title_fon
         if save_path is not None:
             mmcv.mkdir_or_exist(osp.dirname(save_path))
             plt.savefig(save_path)
-    return fig
-
+    buffer = BytesIO()
+    plt.savefig(buffer, format="png")
+    buffer.seek(0)
+    image = Image.open(buffer)
+    plt.cla()
+    return np.array(image)
 
 def heatmap(input, min=None, max=None, to_255=False, to_rgb=False, colormap=cv2.COLORMAP_JET):
     """Returns a BGR heatmap representation."""
