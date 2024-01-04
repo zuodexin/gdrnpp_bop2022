@@ -20,6 +20,7 @@ from .backbones.pvnet_net.model_repository import (
 
 # d2 resnet
 from .backbones.resnet_d2 import ResNet50_GN_D2
+from .backbones.sdvae.vae import SD_VAE
 
 from .necks.fpn import FPN
 from .heads.fpn_mask_xyz_region_head import FPNMaskXyzRegionHead
@@ -50,6 +51,8 @@ BACKBONES = {
     "mm/Darknet": Darknet,
     # d2 resnet
     "resnet50_gn_d2": ResNet50_GN_D2,
+    # sd vae
+    "sdvae": SD_VAE,
 }
 
 
