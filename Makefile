@@ -22,11 +22,14 @@ GDRN_CONFIG := ./configs/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_am
 TRAINED_GDRN := ./output/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_robi/model_0049319.pth
 
 # tless
-GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless.py
-TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless/model_final.pth
+GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6010.py
+TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6010/model_final.pth
 
 train_gdrnet:
 	./core/gdrn_modeling/train_gdrn.sh ${GDRN_CONFIG} 0
 
 test_gdrnet:
 	./core/gdrn_modeling/test_gdrn.sh ${GDRN_CONFIG} 0 ${TRAINED_GDRN}
+
+test_dataset:
+	python -m core.gdrn_modeling.datasets.tless_pbr tless_1_train_pbr

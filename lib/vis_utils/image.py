@@ -71,7 +71,7 @@ def grid_show(ims, titles=None, row=1, col=3, dpi=200, save_path=None, title_fon
     plt.savefig(buffer, format="png")
     buffer.seek(0)
     image = Image.open(buffer)
-    plt.cla()
+    plt.close()
     return np.array(image)
 
 def heatmap(input, min=None, max=None, to_255=False, to_rgb=False, colormap=cv2.COLORMAP_JET):

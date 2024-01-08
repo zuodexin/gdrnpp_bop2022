@@ -68,11 +68,13 @@ class GDRN_DoubleMask(nn.Module):
         x,
         gt_xyz=None,
         gt_xyz_bin=None,
+        gt_xyz_sym=None,
         gt_mask_trunc=None,
         gt_mask_visib=None,
         gt_mask_obj=None,
         gt_mask_full=None,
         gt_region=None,
+        gt_region_sym=None,
         gt_ego_rot=None,
         gt_points=None,
         sym_infos=None,
@@ -254,8 +256,10 @@ class GDRN_DoubleMask(nn.Module):
                 out_z=coor_z,
                 gt_xyz=gt_xyz,
                 gt_xyz_bin=gt_xyz_bin,
+                gt_xyz_sym=gt_xyz_sym,
                 out_region=region,
                 gt_region=gt_region,
+                gt_region_sym=gt_region_sym,
                 out_trans=pred_trans,
                 gt_trans=gt_trans,
                 out_rot=pred_ego_rot,
@@ -298,8 +302,10 @@ class GDRN_DoubleMask(nn.Module):
         out_z,
         gt_xyz,
         gt_xyz_bin,
+        gt_xyz_sym,
         out_region,
         gt_region,
+        gt_region_sym,
         out_rot=None,
         gt_rot=None,
         out_trans=None,
@@ -321,6 +327,16 @@ class GDRN_DoubleMask(nn.Module):
         gt_masks = {"trunc": gt_mask_trunc, "visib": gt_mask_visib, "obj": gt_mask_obj, "full": gt_mask_full}
 
         # xyz loss ----------------------------------
+        if  loss_cfg.XYZ_LOSS_SYM:
+            assert loss_cfg.XYZ_LOSS_TYPE == "L1"
+            pred_xyz = torch.cat([out_x, out_y, out_z], dim=1)
+            bs = pred_xyz.shape[0]
+            closest_xyz = torch.zeros_like(pred_xyz)
+            for _i in range(bs):
+                dist = torch.norm(pred_xyz[_i].unsqueeze(0) - gt_xyz_sym[_i], dim=1).flatten(1).mean(1)
+                closest_xyz[_i] = gt_xyz_sym[_i][torch.argmin(dist)]
+            gt_xyz = closest_xyz
+        
         if not g_head_cfg.FREEZE:
             xyz_loss_type = loss_cfg.XYZ_LOSS_TYPE
             gt_mask_xyz = gt_masks[loss_cfg.XYZ_LOSS_MASK_GT]
@@ -399,6 +415,17 @@ class GDRN_DoubleMask(nn.Module):
             loss_dict["loss_mask_full"] *= loss_cfg.FULL_MASK_LW
 
         # roi region loss --------------------
+        if  loss_cfg.REGION_LOSS_SYM:
+            closest_region = torch.zeros_like(out_region)
+            bs = out_region.shape[0]
+            for _i in range(bs):
+                n_sym = gt_region_sym[_i].shape[0]
+                dist = nn.CrossEntropyLoss(reduction="none")(out_region[_i].unsqueeze(0).expand(n_sym,-1,-1,-1), 
+                    gt_region_sym[_i].long())
+                dist = dist.flatten(1).mean(1)
+                closest_region[_i] = gt_region_sym[_i][torch.argmin(dist)]
+            out_region = closest_region
+
         if not g_head_cfg.FREEZE:
             region_loss_type = loss_cfg.REGION_LOSS_TYPE
             gt_mask_region = gt_masks[loss_cfg.REGION_LOSS_MASK_GT]

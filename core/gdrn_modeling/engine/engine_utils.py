@@ -1,6 +1,7 @@
 import os.path as osp
 import torch
 import numpy as np
+import skimage
 import mmcv
 import itertools
 from einops import rearrange
@@ -22,26 +23,36 @@ def batch_data(cfg, data, renderer=None, device="cuda", phase="train"):
 
     # batch training data
     batch = {}
-    batch["roi_img"] = torch.stack([d["roi_img"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_img"] = torch.stack([d["roi_img"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     if cfg.INPUT.WITH_DEPTH:
-        batch["roi_depth"] = torch.stack([d["roi_depth"] for d in data], dim=0).to(device, non_blocking=True)
-
-    batch["roi_cls"] = torch.as_tensor([d["roi_cls"] for d in data], dtype=torch.long).to(device, non_blocking=True)
-    if "roi_coord_2d" in data[0]:
-        batch["roi_coord_2d"] = torch.stack([d["roi_coord_2d"] for d in data], dim=0).to(
-            device=device, non_blocking=True
+        batch["roi_depth"] = torch.stack([d["roi_depth"] for d in data], dim=0).to(
+            device, non_blocking=True
         )
+
+    batch["roi_cls"] = torch.as_tensor(
+        [d["roi_cls"] for d in data], dtype=torch.long
+    ).to(device, non_blocking=True)
+    if "roi_coord_2d" in data[0]:
+        batch["roi_coord_2d"] = torch.stack(
+            [d["roi_coord_2d"] for d in data], dim=0
+        ).to(device=device, non_blocking=True)
 
     if "roi_coord_2d_rel" in data[0]:
-        batch["roi_coord_2d_rel"] = torch.stack([d["roi_coord_2d_rel"] for d in data], dim=0).to(
-            device=device, non_blocking=True
-        )
+        batch["roi_coord_2d_rel"] = torch.stack(
+            [d["roi_coord_2d_rel"] for d in data], dim=0
+        ).to(device=device, non_blocking=True)
 
-    batch["roi_cam"] = torch.stack([d["cam"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_cam"] = torch.stack([d["cam"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     batch["roi_center"] = torch.stack([d["bbox_center"] for d in data], dim=0).to(
         device=device, dtype=torch.float32, non_blocking=True
     )
-    batch["roi_wh"] = torch.stack([d["roi_wh"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_wh"] = torch.stack([d["roi_wh"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     batch["resize_ratio"] = torch.as_tensor([d["resize_ratio"] for d in data]).to(
         device=device, dtype=torch.float32, non_blocking=True
     )
@@ -49,7 +60,9 @@ def batch_data(cfg, data, renderer=None, device="cuda", phase="train"):
         device=device, dtype=torch.float32, non_blocking=True
     )
 
-    batch["roi_trans_ratio"] = torch.stack([d["trans_ratio"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_trans_ratio"] = torch.stack([d["trans_ratio"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     # yapf: disable
     for key in [
         "roi_xyz", "roi_xyz_bin",
@@ -78,26 +91,36 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
     net_cfg = cfg.MODEL.POSE_NET
     g_head_cfg = net_cfg.GEO_HEAD
     batch = {}
-    batch["roi_img"] = torch.stack([d["roi_img"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_img"] = torch.stack([d["roi_img"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     if cfg.INPUT.WITH_DEPTH:
-        batch["roi_depth"] = torch.stack([d["roi_depth"] for d in data], dim=0).to(device, non_blocking=True)
-    batch["roi_cls"] = torch.as_tensor([d["roi_cls"] for d in data], dtype=torch.long).to(device, non_blocking=True)
+        batch["roi_depth"] = torch.stack([d["roi_depth"] for d in data], dim=0).to(
+            device, non_blocking=True
+        )
+    batch["roi_cls"] = torch.as_tensor(
+        [d["roi_cls"] for d in data], dtype=torch.long
+    ).to(device, non_blocking=True)
     bs = batch["roi_cls"].shape[0]
     if "roi_coord_2d" in data[0]:
-        batch["roi_coord_2d"] = torch.stack([d["roi_coord_2d"] for d in data], dim=0).to(
-            device=device, non_blocking=True
-        )
+        batch["roi_coord_2d"] = torch.stack(
+            [d["roi_coord_2d"] for d in data], dim=0
+        ).to(device=device, non_blocking=True)
 
     if "roi_coord_2d_rel" in data[0]:
-        batch["roi_coord_2d_rel"] = torch.stack([d["roi_coord_2d_rel"] for d in data], dim=0).to(
-            device=device, non_blocking=True
-        )
+        batch["roi_coord_2d_rel"] = torch.stack(
+            [d["roi_coord_2d_rel"] for d in data], dim=0
+        ).to(device=device, non_blocking=True)
 
-    batch["roi_cam"] = torch.stack([d["cam"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_cam"] = torch.stack([d["cam"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     batch["roi_center"] = torch.stack([d["bbox_center"] for d in data], dim=0).to(
         device=device, dtype=torch.float32, non_blocking=True
     )
-    batch["roi_scale"] = torch.as_tensor([d["scale"] for d in data], device=device, dtype=torch.float32)
+    batch["roi_scale"] = torch.as_tensor(
+        [d["scale"] for d in data], device=device, dtype=torch.float32
+    )
     batch["resize_ratio"] = torch.as_tensor(
         [d["resize_ratio"] for d in data], device=device, dtype=torch.float32
     )  # out_res/scale
@@ -105,14 +128,20 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
     roi_crop_xy_batch = batch["roi_center"] - batch["roi_scale"].view(bs, -1) / 2
     out_res = net_cfg.OUTPUT_RES
     roi_resize_ratio_batch = out_res / batch["roi_scale"].view(bs, -1)
-    batch["roi_zoom_K"] = get_K_crop_resize(batch["roi_cam"], roi_crop_xy_batch, roi_resize_ratio_batch)
+    batch["roi_zoom_K"] = get_K_crop_resize(
+        batch["roi_cam"], roi_crop_xy_batch, roi_resize_ratio_batch
+    )
     # --------------------------------------------------------------
-    batch["roi_wh"] = torch.stack([d["roi_wh"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_wh"] = torch.stack([d["roi_wh"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     batch["roi_extent"] = torch.stack([d["roi_extent"] for d in data], dim=0).to(
         device=device, dtype=torch.float32, non_blocking=True
     )  # [b,3]
 
-    batch["roi_trans_ratio"] = torch.stack([d["trans_ratio"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_trans_ratio"] = torch.stack([d["trans_ratio"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     # yapf: disable
     for key in [
         "roi_mask_trunc", "roi_mask_visib", "roi_mask_full",
@@ -130,8 +159,12 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
 
     # rendering online xyz -----------------------------
     if net_cfg.XYZ_BP:
-        pc_cam_tensor = torch.cuda.FloatTensor(out_res, out_res, 4, device=device).detach()
-        roi_depth_batch = torch.empty(bs, out_res, out_res, dtype=torch.float32, device=device)
+        pc_cam_tensor = torch.cuda.FloatTensor(
+            out_res, out_res, 4, device=device
+        ).detach()
+        roi_depth_batch = torch.empty(
+            bs, out_res, out_res, dtype=torch.float32, device=device
+        )
         for _i in range(bs):
             pose = np.hstack(
                 [
@@ -154,8 +187,12 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
             fmt="BHWC",
         )
     else:  # directly rendering xyz
-        pc_obj_tensor = torch.cuda.FloatTensor(out_res, out_res, 4, device=device).detach()  # xyz
-        roi_xyz_batch = torch.empty(bs, out_res, out_res, 3, dtype=torch.float32, device=device)
+        pc_obj_tensor = torch.cuda.FloatTensor(
+            out_res, out_res, 4, device=device
+        ).detach()  # xyz
+        roi_xyz_batch = torch.empty(
+            bs, out_res, out_res, 3, dtype=torch.float32, device=device
+        )
         for _i in range(bs):
             pose = np.hstack(
                 [
@@ -173,18 +210,26 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
 
     # [bs, out_res, out_res]
     batch["roi_mask_obj"] = (
-        (roi_xyz_batch[..., 0] != 0) & (roi_xyz_batch[..., 1] != 0) & (roi_xyz_batch[..., 2] != 0)
+        (roi_xyz_batch[..., 0] != 0)
+        & (roi_xyz_batch[..., 1] != 0)
+        & (roi_xyz_batch[..., 2] != 0)
     ).to(torch.float32)
     batch["roi_mask_trunc"] = batch["roi_mask_trunc"] * batch["roi_mask_obj"]
     batch["roi_mask_visib"] = batch["roi_mask_visib"] * batch["roi_mask_obj"]
 
     if g_head_cfg.NUM_REGIONS > 1:  # get roi_region ------------------------
-        batch["roi_fps_points"] = torch.stack([d["roi_fps_points"] for d in data], dim=0).to(
-            device=device, dtype=torch.float32, non_blocking=True
+        batch["roi_fps_points"] = torch.stack(
+            [d["roi_fps_points"] for d in data], dim=0
+        ).to(device=device, dtype=torch.float32, non_blocking=True)
+        batch["roi_region"] = xyz_to_region_batch(
+            roi_xyz_batch, batch["roi_fps_points"], mask=batch["roi_mask_obj"]
         )
-        batch["roi_region"] = xyz_to_region_batch(roi_xyz_batch, batch["roi_fps_points"], mask=batch["roi_mask_obj"])
     # normalize to [0, 1]
-    batch["roi_xyz"] = rearrange(roi_xyz_batch, "b h w c -> b c h w") / batch["roi_extent"].view(bs, 3, 1, 1) + 0.5
+    batch["roi_xyz"] = (
+        rearrange(roi_xyz_batch, "b h w c -> b c h w")
+        / batch["roi_extent"].view(bs, 3, 1, 1)
+        + 0.5
+    )
 
     # get xyz bin if needed ---------------------------------
     loss_cfg = net_cfg.LOSS_CFG
@@ -192,7 +237,9 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
     if ("CE" in xyz_loss_type) or ("cls" in net_cfg.NAME):
         # coordinates: [0, 1] to discrete [0, XYZ_BIN-1]
         roi_xyz_bin_batch = (
-            (batch["roi_xyz"] * (g_head_cfg.XYZ_BIN - 1) + 0.5).clamp(min=0, max=g_head_cfg.XYZ_BIN).to(torch.long)
+            (batch["roi_xyz"] * (g_head_cfg.XYZ_BIN - 1) + 0.5)
+            .clamp(min=0, max=g_head_cfg.XYZ_BIN)
+            .to(torch.long)
         )
         # set bg to XYZ_BIN
         roi_masks = {
@@ -205,9 +252,57 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
             roi_xyz_bin_batch[:, _c][roi_mask_xyz == 0] = g_head_cfg.XYZ_BIN
         batch["roi_xyz_bin"] = roi_xyz_bin_batch
 
+    add_sym_targets(batch)
+
     if cfg.TRAIN.VIS:
         vis_batch(cfg, batch, phase="train")
     return batch
+
+
+def add_sym_targets(batch):
+    """
+    add sym targets to batch
+    """
+    symmetries = batch["sym_info"]
+    # device = "cpu"
+    device = batch["roi_xyz"].device
+
+    bs, _, h, w = batch["roi_xyz"].shape
+    roi_extent = batch["roi_extent"].view(bs, 1, 1, 3).to(device)
+    roi_xyz = rearrange(batch["roi_xyz"], "b c h w -> b h w c").to(device)
+    roi_xyz = (roi_xyz - 0.5) * roi_extent
+    roi_xyz_sym_batch = []
+    roi_region_sym_batch = []
+
+    for i in range(bs):
+        sym = symmetries[i]
+        n_sym = len(sym)
+        sym_tensor = torch.as_tensor(sym).to(roi_xyz)
+        xyz_patch_f = roi_xyz[i].reshape(-1, 3)
+        xyz_patch_t = xyz_patch_f.unsqueeze(0) @ sym_tensor.permute(0, 2, 1)
+        xyz_patch_t = xyz_patch_t.reshape(n_sym, h, w, 3)
+        roi_xyz_sym = xyz_patch_t / roi_extent[i].unsqueeze(0) + 0.5
+        roi_xyz_sym_batch.append(roi_xyz_sym.permute(0, 3, 1, 2))
+
+        # plot roi_xyz_sym
+        # vis_img = np.concatenate([img.cpu().numpy() for img in roi_xyz_sym], axis=1)
+        # skimage.io.imsave("output/roi_xyz_sym.png", (vis_img.clip(0,1)*255).astype(np.uint8))
+
+        roi_fps_points = batch["roi_fps_points"][i].expand(n_sym, -1, -1).to(device)
+        mask = batch["roi_mask_obj"][i].expand(n_sym, -1, -1)
+        roi_region_sym = xyz_to_region_batch(
+            roi_xyz_sym, roi_fps_points, mask=mask.to(device)
+        )
+        roi_region_sym_batch.append(roi_region_sym)
+
+        # vis_img = np.concatenate([img.cpu().numpy() for img in roi_region_sym], axis=1)
+        # black_pixels = np.where(vis_img == 0)
+        # vis_img = (vis_img - vis_img.min()) / (vis_img.max() - vis_img.min())
+        # vis_img[black_pixels] = 0
+        # skimage.io.imsave("output/roi_region_sym.png", (vis_img.clip(0,1)*255).astype(np.uint8))
+
+    batch["roi_xyz_sym"] = roi_xyz_sym_batch
+    batch["roi_region_sym"] = roi_region_sym_batch
 
 
 def batch_data_test(cfg, data, device="cuda"):
@@ -231,8 +326,12 @@ def batch_data_test(cfg, data, device="cuda"):
             batch[key] = torch.cat([d[key] for d in data], dim=0).to(device=device, dtype=dtype, non_blocking=True)
     # yapf: enable
 
-    batch["roi_cam"] = torch.cat([d["cam"] for d in data], dim=0).to(device, non_blocking=True)
-    batch["roi_center"] = torch.cat([d["bbox_center"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_cam"] = torch.cat([d["cam"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
+    batch["roi_center"] = torch.cat([d["bbox_center"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     for key in ["scene_im_id", "file_name", "model_info"]:
         # flatten the lists
         if key in data[0]:
@@ -240,29 +339,42 @@ def batch_data_test(cfg, data, device="cuda"):
 
     return batch
 
-def batch_data_inference_roi(cfg, data, device='cuda'):
+
+def batch_data_inference_roi(cfg, data, device="cuda"):
     net_cfg = cfg.MODEL.POSE_NET
     g_head_cfg = net_cfg.GEO_HEAD
     batch = {}
-    batch["roi_img"] = torch.cat([d["roi_img"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_img"] = torch.cat([d["roi_img"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     bs = batch["roi_img"].shape[0]
 
-
-    batch["roi_cam"] = torch.cat([d["cam"] for d in data], dim=0).to(device, non_blocking=True)
+    batch["roi_cam"] = torch.cat([d["cam"] for d in data], dim=0).to(
+        device, non_blocking=True
+    )
     batch["roi_center"] = torch.cat([d["bbox_center"] for d in data], dim=0).to(
         device=device, dtype=torch.float32, non_blocking=True
     )
-    batch["roi_scale"] = [torch.as_tensor(d["scale"], device=device, dtype=torch.float32) for d in data]
+    batch["roi_scale"] = [
+        torch.as_tensor(d["scale"], device=device, dtype=torch.float32) for d in data
+    ]
     batch["roi_scale"] = torch.cat(batch["roi_scale"], dim=0).to(
-        device=device, dtype=torch.float32, non_blocking=True)
-    batch["resize_ratio"] = [torch.as_tensor(d["resize_ratio"], device=device, dtype=torch.float32) for d in data]  # out_res/scale
+        device=device, dtype=torch.float32, non_blocking=True
+    )
+    batch["resize_ratio"] = [
+        torch.as_tensor(d["resize_ratio"], device=device, dtype=torch.float32)
+        for d in data
+    ]  # out_res/scale
     batch["resize_ratio"] = torch.cat(batch["resize_ratio"], dim=0).to(
-        device=device, dtype=torch.float32, non_blocking=True)
+        device=device, dtype=torch.float32, non_blocking=True
+    )
     # get crop&resized K -------------------------------------------
     roi_crop_xy_batch = batch["roi_center"] - batch["roi_scale"].view(bs, -1) / 2
     out_res = net_cfg.OUTPUT_RES
     roi_resize_ratio_batch = out_res / batch["roi_scale"].view(bs, -1)
-    batch["roi_zoom_K"] = get_K_crop_resize(batch["roi_cam"], roi_crop_xy_batch, roi_resize_ratio_batch)
+    batch["roi_zoom_K"] = get_K_crop_resize(
+        batch["roi_cam"], roi_crop_xy_batch, roi_resize_ratio_batch
+    )
     return batch
 
 
@@ -271,11 +383,15 @@ def get_renderer(cfg, data_ref, obj_names, gpu_id=None):
     model_dir = data_ref.model_dir
 
     obj_ids = [data_ref.obj2id[_obj] for _obj in obj_names]
-    model_paths = [osp.join(model_dir, "obj_{:06d}.ply".format(obj_id)) for obj_id in obj_ids]
+    model_paths = [
+        osp.join(model_dir, "obj_{:06d}.ply".format(obj_id)) for obj_id in obj_ids
+    ]
 
     texture_paths = None
     if data_ref.texture_paths is not None:
-        texture_paths = [osp.join(model_dir, "obj_{:06d}.png".format(obj_id)) for obj_id in obj_ids]
+        texture_paths = [
+            osp.join(model_dir, "obj_{:06d}.png".format(obj_id)) for obj_id in obj_ids
+        ]
 
     ren = EGLRenderer(
         model_paths,

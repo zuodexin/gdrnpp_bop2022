@@ -110,6 +110,7 @@ MODEL = dict(
             XYZ_LOSS_TYPE="L1",  # L1 | CE_coor
             XYZ_LOSS_MASK_GT="visib",  # trunc | visib | obj
             XYZ_LW=1.0,
+            XYZ_LOSS_SYM=False,  # use symmetric xyz loss
             # full mask loss ---------------------------
             FULL_MASK_LOSS_TYPE="BCE",  # L1 | BCE | CE
             FULL_MASK_LW=0.0,
@@ -121,6 +122,7 @@ MODEL = dict(
             REGION_LOSS_TYPE="CE",  # CE
             REGION_LOSS_MASK_GT="visib",  # trunc | visib | obj
             REGION_LW=1.0,
+            REGION_LOSS_SYM=False,
             # point matching loss -----------------
             NUM_PM_POINTS=3000,
             PM_LOSS_TYPE="L1",  # L1 | Smooth_L1
@@ -170,5 +172,5 @@ TEST = dict(
     USE_DEPTH_REFINE=False,
     DEPTH_REFINE_ITER=2,
     DEPTH_REFINE_THRESHOLD=0.8,
-    USE_COOR_Z_REFINE=False
+    USE_COOR_Z_REFINE=False,
 )
