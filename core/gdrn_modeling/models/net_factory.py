@@ -29,6 +29,7 @@ from .heads.top_down_mask_xyz_head import TopDownMaskXyzHead
 from .heads.top_down_doublemask_xyz_region_head import (
     TopDownDoubleMaskXyzRegionHead,
 )
+from .heads.gpose_siren_pe_head import GPoseDoubleMaskSirenPEHead
 from .heads.conv_mask_xyz_region_head import ConvMaskXyzRegionHead
 from .heads.conv_pnp_net import ConvPnPNet
 from .heads.conv_pnp_net_no_region import ConvPnPNetNoRegion
@@ -88,6 +89,7 @@ HEADS = {
     "ConvMaskXyzRegionHead": ConvMaskXyzRegionHead,
     "FPNMaskXyzRegionHead": FPNMaskXyzRegionHead,
     "TopDownMaskXyzHead": TopDownMaskXyzHead,
+    "GPoseDoubleMaskSirenPEHead": GPoseDoubleMaskSirenPEHead,
     # pnp net
     "ConvPnPNet": ConvPnPNet,
     "ConvPnPNetNoRegion": ConvPnPNetNoRegion,

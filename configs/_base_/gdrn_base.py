@@ -21,6 +21,7 @@ MODEL = dict(
         USE_MTL=False,  # uncertainty multi-task weighting
         INPUT_RES=256,
         OUTPUT_RES=64,
+        XYZ_TYPE="coordinate",
         ## backbone
         BACKBONE=dict(
             FREEZE=False,
