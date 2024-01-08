@@ -276,6 +276,8 @@ def add_sym_targets(batch):
 
     for i in range(bs):
         sym = symmetries[i]
+        if sym is None:
+            sym = np.eye(3)[None]
         n_sym = len(sym)
         sym_tensor = torch.as_tensor(sym).to(roi_xyz)
         xyz_patch_f = roi_xyz[i].reshape(-1, 3)
