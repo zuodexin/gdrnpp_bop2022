@@ -22,10 +22,11 @@ GDRN_CONFIG := ./configs/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_am
 TRAINED_GDRN := ./output/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_robi/model_0049319.pth
 
 # tless
-GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6010.py
-TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6010/model_final.pth
+GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6011_full.py
+TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6011_full/model_final.pth
 
 train_gdrnet:
+	export 'PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64'
 	./core/gdrn_modeling/train_gdrn.sh ${GDRN_CONFIG} 0
 
 test_gdrnet:
