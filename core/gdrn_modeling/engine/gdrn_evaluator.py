@@ -512,7 +512,9 @@ class GDRN_Evaluator(DatasetEvaluator):
                 rot_est = out_rots[out_i]
                 trans_est = out_transes[out_i]
                 pose_est = np.hstack([rot_est, trans_est.reshape(3, 1)])
-                depth_sensor_crop = cv2.resize(_input['roi_depth'][inst_i][-1].cpu().numpy().copy().squeeze(), (self.out_res, self.out_res))
+                
+                out_res = self.cfg.MODEL.POSE_NET.OUTPUT_RES
+                depth_sensor_crop = cv2.resize(_input['roi_depth'][inst_i][-1].cpu().numpy().copy().squeeze(), (out_res, out_res))
                 depth_sensor_mask_crop = depth_sensor_crop > 0
 
                 net_cfg = cfg.MODEL.POSE_NET
@@ -734,17 +736,28 @@ def gdrn_inference_on_dataset(cfg, model, data_loader, evaluator, amp_test=False
                 inp = batch["roi_img"]
 
             with autocast(enabled=amp_test):  # gdrn amp_test seems slower
-                out_dict = model(
-                    inp,
-                    roi_classes=batch["roi_cls"],
-                    roi_cams=batch["roi_cam"],
-                    roi_whs=batch["roi_wh"],
-                    roi_centers=batch["roi_center"],
-                    resize_ratios=batch["resize_ratio"],
-                    roi_coord_2d=batch.get("roi_coord_2d", None),
-                    roi_coord_2d_rel=batch.get("roi_coord_2d_rel", None),
-                    roi_extents=batch.get("roi_extent", None),
-                )
+                batch_size =  len(inp)
+                
+                out_dict_list = []
+                for i in range(batch_size):
+                    out_dict_item = model(
+                        inp[i].unsqueeze(0),
+                        roi_classes=batch["roi_cls"][i].unsqueeze(0),
+                        roi_cams=batch["roi_cam"][i].unsqueeze(0),
+                        roi_whs=batch["roi_wh"][i].unsqueeze(0),
+                        roi_centers=batch["roi_center"][i].unsqueeze(0),
+                        resize_ratios=batch["resize_ratio"][i].unsqueeze(0),
+                        roi_coord_2d=batch.get("roi_coord_2d", None)[i].unsqueeze(0),
+                        roi_coord_2d_rel=batch.get("roi_coord_2d_rel", None),
+                        roi_extents=batch.get("roi_extent", None)[i].unsqueeze(0),
+                    )
+                    out_dict_list.append(out_dict_item)
+                ld2dl = lambda LD: {k: [dic[k] for dic in LD] for k in LD[0]}
+                out_dict = ld2dl(out_dict_list)
+                for k in out_dict.keys():
+                    if isinstance(out_dict[k][0], torch.Tensor):
+                        out_dict[k] = torch.concat(out_dict[k])
+                
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
             cur_compute_time = time.perf_counter() - start_compute_time

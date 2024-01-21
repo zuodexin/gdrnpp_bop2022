@@ -29,6 +29,7 @@ INPUT = dict(
         "], random_order=True)"
         # cosy+aae
     ),
+    # WITH_DEPTH=True,
 )
 
 SOLVER = dict(
@@ -149,5 +150,10 @@ VAL = dict(
 )
 
 TEST = dict(
-    EVAL_PERIOD=0, VIS=True, TEST_BBOX_TYPE="est", SAVE_RESULTS_ONLY=True
+    EVAL_PERIOD=0,
+    VIS=False,
+    TEST_BBOX_TYPE="est",
+    SAVE_RESULTS_ONLY=False,
+    # USE_DEPTH_REFINE=True,
+    # USE_COOR_Z_REFINE=True,
 )  # gt | est

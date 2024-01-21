@@ -69,13 +69,14 @@ class GDRN_DoubleMask(nn.Module):
                     f"log_var_{loss_name}", nn.Parameter(torch.tensor([0.0], requires_grad=True, dtype=torch.float32))
                 )
         # yapf: enable
-        self.pos_xyz = PosEncoding(
-            d_model=cfg.MODEL.POSE_NET.POS_DIM,
-            scale=cfg.MODEL.POSE_NET.POS_SCALE,
-            min_freq=cfg.MODEL.POSE_NET.POS_MIN_FREQ,
-            std=cfg.MODEL.POSE_NET.POS_STD,
-            normalize=True,
-        )
+        if  cfg.MODEL.POSE_NET.XYZ_TYPE == "pe":
+            self.pos_xyz = PosEncoding(
+                d_model=cfg.MODEL.POSE_NET.POS_DIM,
+                scale=cfg.MODEL.POSE_NET.POS_SCALE,
+                min_freq=cfg.MODEL.POSE_NET.POS_MIN_FREQ,
+                std=cfg.MODEL.POSE_NET.POS_STD,
+                normalize=True,
+            )
 
         self.xyz_type = cfg.MODEL.POSE_NET.XYZ_TYPE
 

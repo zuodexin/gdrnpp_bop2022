@@ -5,7 +5,11 @@ from torch import nn
 from torch.nn.modules.instancenorm import _InstanceNorm
 from torch.nn.modules.batchnorm import _BatchNorm
 import torch.nn.functional as F
-from detectron2.layers.batch_norm import BatchNorm2d, FrozenBatchNorm2d, NaiveSyncBatchNorm
+from detectron2.layers.batch_norm import (
+    BatchNorm2d,
+    FrozenBatchNorm2d,
+    NaiveSyncBatchNorm,
+)
 from detectron2.utils import env
 from .acon import AconC, MetaAconC
 
@@ -26,7 +30,28 @@ class SMU(nn.Module):
         self.mu = nn.Parameter(torch.FloatTensor([mu_init]))
 
     def forward(self, x):
-        return 0.5 * ((1 + self.alpha) * x + (1 - self.alpha) * x * torch.erf(self.mu * (1 - self.alpha) * x))
+        return 0.5 * (
+            (1 + self.alpha) * x
+            + (1 - self.alpha) * x * torch.erf(self.mu * (1 - self.alpha) * x)
+        )
+
+
+class Sine(nn.Module):
+    def __init__(self, w0=1.0):
+        super().__init__()
+        self.w0 = w0
+
+    def forward(self, x):
+        return torch.sin(self.w0 * x)
+
+
+class Gaussian(nn.Module):
+    def __init__(self, sigma=1.0):
+        super().__init__()
+        self.sigma = sigma
+
+    def forward(self, x):
+        return torch.exp(-(x**2) / (2 * self.sigma**2))
 
 
 def get_norm(norm, out_channels, num_gn_groups=32):
@@ -46,7 +71,9 @@ def get_norm(norm, out_channels, num_gn_groups=32):
         norm = {
             "BN": BatchNorm2d,
             # Fixed in https://github.com/pytorch/pytorch/pull/36382
-            "SyncBN": NaiveSyncBatchNorm if env.TORCH_VERSION <= (1, 5) else nn.SyncBatchNorm,
+            "SyncBN": NaiveSyncBatchNorm
+            if env.TORCH_VERSION <= (1, 5)
+            else nn.SyncBatchNorm,
             "FrozenBN": FrozenBatchNorm2d,
             "GN": lambda channels: nn.GroupNorm(num_gn_groups, channels),
             "IN": nn.InstanceNorm2d,
@@ -87,6 +114,12 @@ def get_nn_act_func(act, inplace=True, **kwargs):
         alpha = kwargs.get("alpha", 0.25)
         mu_init = kwargs.get("mu_init", 1e6)
         act_func = SMU(alpha=alpha, mu_init=mu_init)
+    elif act.lower() == "siren":
+        w0 = kwargs.get("w0", 30.0)
+        act_func = Sine(w0=w0)
+    elif act.lower() == "gaussian":
+        sigma = kwargs.get("sigma", 0.05)
+        act_func = Gaussian(sigma)
     elif len(act) == 0 or act.lower() == "none":
         return nn.Identity()
     else:
@@ -210,7 +243,9 @@ def resize(
 
 
 class Upsample(nn.Module):
-    def __init__(self, size=None, scale_factor=None, mode="nearest", align_corners=None):
+    def __init__(
+        self, size=None, scale_factor=None, mode="nearest", align_corners=None
+    ):
         super(Upsample, self).__init__()
         self.size = size
         if isinstance(scale_factor, tuple):

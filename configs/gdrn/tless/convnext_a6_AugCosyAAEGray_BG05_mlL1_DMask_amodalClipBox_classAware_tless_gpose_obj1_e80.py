@@ -1,7 +1,6 @@
 _base_ = ["../../_base_/gdrn_base.py"]
-# gpose + closest GT
 
-OUTPUT_DIR = "output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6011_full"
+OUTPUT_DIR = "output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_gpose_obj1_e80"
 INPUT = dict(
     DZI_PAD_SCALE=1.5,
     TRUNCATE_FG=True,
@@ -30,12 +29,11 @@ INPUT = dict(
         "], random_order=True)"
         # cosy+aae
     ),
-    WITH_DEPTH=True,
 )
 
 SOLVER = dict(
-    IMS_PER_BATCH=18,
-    TOTAL_EPOCHS=40,  # 30
+    IMS_PER_BATCH=24,
+    TOTAL_EPOCHS=80,  # 30
     LR_SCHEDULER_NAME="flat_and_anneal",
     ANNEAL_METHOD="cosine",  # "cosine"
     ANNEAL_POINT=0.72,
@@ -47,10 +45,10 @@ SOLVER = dict(
 
 DATASETS = dict(
     TRAIN=(
-        "tless_train_primesense",
-        "tless_train_pbr",
+        "tless_1_train_primesense",
+        "tless_1_train_pbr",
     ),
-    TEST=("tless_bop_test_primesense",),
+    TEST=("tless_1_bop_test_primesense",),
     # AP        AP50    AP75    AR      inf.time
     DET_FILES_TEST=(
         "../data/BOP/GDRNPP_test_bbox/tless/test/test_bboxes/yolox_x_640_tless_real_pbr_tless_bop_test.json",
@@ -73,11 +71,6 @@ MODEL = dict(
         NAME="GDRN_double_mask",
         XYZ_ONLINE=True,
         NUM_CLASSES=30,
-        XYZ_TYPE="pe",
-        POS_DIM=32,  # position encoding dim
-        POS_SCALE=10000,  # position encoding scale
-        POS_MIN_FREQ=1e-4,  # minimum frequency for positional encoding
-        POS_STD=1,  # std for positional encoding
         BACKBONE=dict(
             FREEZE=False,
             PRETRAINED="timm",
@@ -93,7 +86,7 @@ MODEL = dict(
         GEO_HEAD=dict(
             FREEZE=False,
             INIT_CFG=dict(
-                type="GPoseDoubleMaskSirenPEHead",
+                type="TopDownDoubleMaskXyzRegionHead",
                 in_dim=1024,  # this is num out channels of backbone conv feature
             ),
             NUM_REGIONS=64,
@@ -113,7 +106,6 @@ MODEL = dict(
             XYZ_LOSS_TYPE="L1",  # L1 | CE_coor
             XYZ_LOSS_MASK_GT="visib",  # trunc | visib | obj
             XYZ_LW=1.0,
-            XYZ_LOSS_SYM=True,  # use symmetric xyz loss
             # mask loss ---------------------------
             MASK_LOSS_TYPE="L1",  # L1 | BCE | CE
             MASK_LOSS_GT="trunc",  # trunc | visib | gt
@@ -125,7 +117,6 @@ MODEL = dict(
             REGION_LOSS_TYPE="CE",  # CE
             REGION_LOSS_MASK_GT="visib",  # trunc | visib | obj
             REGION_LW=1.0,
-            REGION_LOSS_SYM=True,
             # pm loss --------------
             PM_LOSS_SYM=True,  # NOTE: sym loss
             PM_R_ONLY=True,  # only do R loss in PM
@@ -158,10 +149,5 @@ VAL = dict(
 )
 
 TEST = dict(
-    EVAL_PERIOD=0,
-    VIS=False,
-    TEST_BBOX_TYPE="est",
-    SAVE_RESULTS_ONLY=False,
-    USE_DEPTH_REFINE=True,
-    # USE_COOR_Z_REFINE=False,
+    EVAL_PERIOD=0, VIS=False, TEST_BBOX_TYPE="est", SAVE_RESULTS_ONLY=False
 )  # gt | est
