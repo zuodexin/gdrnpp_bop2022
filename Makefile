@@ -17,13 +17,9 @@ DST_DET := 	./output/yolox/bop_pbr/yolox_x_640_augCozyAAEhsv_ranger_30_epochs_ro
 convert_det:
 	python ./core/gdrn_modeling/tools/robi/convert_det_to_our_format.py --coco_bop_input ${SRC_DET} --output ${DST_DET}
 
-
-GDRN_CONFIG := ./configs/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_robi.py
-TRAINED_GDRN := ./output/gdrn/robi/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_robi/model_0049319.pth
-
 # tless
-GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_gpose_obj1_e80.py
-TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_gpose_obj1_e80/model_final.pth
+GDRN_CONFIG := ./configs/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6017.py
+TRAINED_GDRN := ./output/gdrn/tless/convnext_a6_AugCosyAAEGray_BG05_mlL1_DMask_amodalClipBox_classAware_tless_ge6017/model_final.pth
 
 train_gdrnet:
 	export 'PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:64'
