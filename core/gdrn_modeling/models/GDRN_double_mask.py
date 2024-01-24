@@ -552,7 +552,7 @@ class GDRN_DoubleMask(nn.Module):
                 )
                 dist = dist.flatten(1).mean(1)
                 closest_region[_i] = gt_region_sym[_i][torch.argmin(dist)]
-            out_region = closest_region
+            gt_region = closest_region
 
         if not g_head_cfg.FREEZE:
             region_loss_type = loss_cfg.REGION_LOSS_TYPE
