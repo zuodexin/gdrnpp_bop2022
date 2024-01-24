@@ -35,6 +35,7 @@ from .heads.conv_pnp_net import ConvPnPNet
 from .heads.conv_pnp_net_no_region import ConvPnPNetNoRegion
 from .heads.conv_pnp_net_cls import ConvPnPNetCls
 from .heads.point_pnp_net import SimplePointPnPNet
+from .heads.gpose_modulated_head import GposeDoubleMaskModulatedHead
 
 from .fusenets.conv_fuse_net import ConvFuseNet
 
@@ -90,6 +91,7 @@ HEADS = {
     "FPNMaskXyzRegionHead": FPNMaskXyzRegionHead,
     "TopDownMaskXyzHead": TopDownMaskXyzHead,
     "GPoseDoubleMaskSirenPEHead": GPoseDoubleMaskSirenPEHead,
+    "GposeDoubleMaskModulatedHead": GposeDoubleMaskModulatedHead,
     # pnp net
     "ConvPnPNet": ConvPnPNet,
     "ConvPnPNetNoRegion": ConvPnPNetNoRegion,
