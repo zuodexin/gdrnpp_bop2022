@@ -542,7 +542,7 @@ class GDRN_DoubleMask(nn.Module):
 
         # roi region loss --------------------
         if loss_cfg.REGION_LOSS_SYM:
-            closest_region = torch.zeros_like(out_region)
+            closest_region = []
             bs = out_region.shape[0]
             for _i in range(bs):
                 n_sym = gt_region_sym[_i].shape[0]
@@ -551,8 +551,8 @@ class GDRN_DoubleMask(nn.Module):
                     gt_region_sym[_i].long(),
                 )
                 dist = dist.flatten(1).mean(1)
-                closest_region[_i] = gt_region_sym[_i][torch.argmin(dist)]
-            gt_region = closest_region
+                closest_region.append(gt_region_sym[_i][torch.argmin(dist)])
+            gt_region = torch.stack(closest_region)
 
         if not g_head_cfg.FREEZE:
             region_loss_type = loss_cfg.REGION_LOSS_TYPE
