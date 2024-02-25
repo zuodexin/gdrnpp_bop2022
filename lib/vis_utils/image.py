@@ -65,7 +65,7 @@ def grid_show(ims, titles=None, row=1, col=3, dpi=200, save_path=None, title_fon
         plt.show()
     else:
         if save_path is not None:
-            mmcv.mkdir_or_exist(osp.dirname(save_path))
+            os.makedirs(osp.dirname(save_path), exist_ok=True)
             plt.savefig(save_path)
     buffer = BytesIO()
     plt.savefig(buffer, format="png")

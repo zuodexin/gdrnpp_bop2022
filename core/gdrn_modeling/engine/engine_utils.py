@@ -5,6 +5,8 @@ import skimage
 import mmcv
 import itertools
 from einops import rearrange
+import matplotlib.pyplot as plt
+
 from lib.egl_renderer.egl_renderer_v3 import EGLRenderer
 from core.utils.camera_geometry import get_K_crop_resize
 from core.utils.data_utils import xyz_to_region_batch
@@ -186,6 +188,54 @@ def batch_data_train_online(cfg, data, renderer, device="cuda"):
             batch["roi_zoom_K"],
             fmt="BHWC",
         )
+
+        # pc_obj_tensor = torch.cuda.FloatTensor(
+        #     out_res, out_res, 4, device=device
+        # ).detach()  # xyz
+        # roi_xyz_batch_dr = torch.empty(
+        #     bs, out_res, out_res, 3, dtype=torch.float32, device=device
+        # )
+        # for _i in range(bs):
+        #     pose = np.hstack(
+        #         [
+        #             batch["ego_rot"][_i].detach().cpu().numpy(),
+        #             batch["trans"][_i].detach().cpu().numpy().reshape(3, 1),
+        #         ]
+        #     )
+        #     renderer.render(
+        #         [int(batch["roi_cls"][_i])],
+        #         [pose],
+        #         K=batch["roi_zoom_K"][_i].detach().cpu().numpy(),
+        #         pc_obj_tensor=pc_obj_tensor,
+        #     )
+        #     roi_xyz_batch_dr[_i].copy_(pc_obj_tensor[:, :, :3], non_blocking=True)
+
+        # roi_xyz_batch = roi_xyz_batch / batch["roi_extent"].view(bs, 1, 1, 3) + 0.5
+        # roi_xyz_batch_dr = (
+        #     roi_xyz_batch_dr / batch["roi_extent"].view(bs, 1, 1, 3) + 0.5
+        # )
+        # # [bs, out_res, out_res]
+        # batch["roi_mask_obj"] = (
+        #     (roi_xyz_batch[..., 0] != 0)
+        #     & (roi_xyz_batch[..., 1] != 0)
+        #     & (roi_xyz_batch[..., 2] != 0)
+        # ).to(torch.float32)
+        # batch["roi_mask_trunc"] = batch["roi_mask_trunc"] * batch["roi_mask_obj"]
+        # batch["roi_mask_visib"] = batch["roi_mask_visib"] * batch["roi_mask_obj"]
+
+        # print(roi_xyz_batch[0].max(), roi_xyz_batch[0].min())
+        # plt.figure()
+        # plt.subplot(2, 2, 1)
+        # plt.imshow(roi_xyz_batch[0].detach().cpu().numpy())
+        # plt.subplot(2, 2, 2)
+        # plt.imshow(roi_xyz_batch_dr[0].detach().cpu().numpy())
+        # plt.subplot(2, 2, 3)
+        # print(batch["roi_mask_obj"].max(), batch["roi_mask_obj"][0])
+        # plt.imshow(batch["roi_mask_obj"][0].detach().cpu().numpy())
+        # plt.subplot(2, 2, 4)
+        # plt.imshow(batch["roi_mask_visib"][0].detach().cpu().numpy())
+        # plt.savefig("output/xyz_gt.png")
+        # exit()
     else:  # directly rendering xyz
         pc_obj_tensor = torch.cuda.FloatTensor(
             out_res, out_res, 4, device=device

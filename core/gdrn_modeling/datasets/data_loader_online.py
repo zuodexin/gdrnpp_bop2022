@@ -548,6 +548,23 @@ class GDRN_Online_DatasetFromList(Base_DatasetFromList):
             fps_points = self._get_fps_points(dataset_name)[roi_cls]
             dataset_dict["roi_fps_points"] = torch.as_tensor(fps_points.astype(np.float32)).contiguous()
 
+        # show_ims = []
+        # show_titles = []
+
+        # print(roi_img.shape)
+        # show_ims.append(np.transpose(roi_img, (1, 2, 0)))
+        # show_titles.append("roi_img")
+        # show_ims.append(roi_mask_visib)
+        # show_titles.append("roi_mask_visib")
+
+        # time.sleep(random.random() * 2)
+        # grid_show(
+        #     ims=show_ims,
+        #     titles=show_titles,
+        #     save_path="output/train_data.png",
+        #     show=False,
+        # )
+
         # pose targets ----------------------------------------------------------------------
         pose = inst_infos["pose"]
         dataset_dict["ego_rot"] = torch.as_tensor(pose[:3, :3].astype("float32"))
@@ -578,6 +595,9 @@ class GDRN_Online_DatasetFromList(Base_DatasetFromList):
         obj_center = anno["centroid_2d"]
         delta_c = obj_center - bbox_center
         dataset_dict["trans_ratio"] = torch.as_tensor([delta_c[0] / bw, delta_c[1] / bh, z_ratio]).to(torch.float32)
+        # print("resize_ratio", resize_ratio)
+        # print(dataset_dict["trans_ratio"])
+        # exit()
         return dataset_dict
 
     def read_data_test(self, dataset_dict):

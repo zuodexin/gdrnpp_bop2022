@@ -8,6 +8,7 @@ import os.path as osp
 import random
 import time
 from collections import OrderedDict
+from matplotlib import pyplot as plt
 
 import cv2
 import mmcv
@@ -512,7 +513,7 @@ class GDRN_Evaluator(DatasetEvaluator):
                 rot_est = out_rots[out_i]
                 trans_est = out_transes[out_i]
                 pose_est = np.hstack([rot_est, trans_est.reshape(3, 1)])
-                
+
                 out_res = self.cfg.MODEL.POSE_NET.OUTPUT_RES
                 depth_sensor_crop = cv2.resize(_input['roi_depth'][inst_i][-1].cpu().numpy().copy().squeeze(), (out_res, out_res))
                 depth_sensor_mask_crop = depth_sensor_crop > 0
@@ -520,11 +521,17 @@ class GDRN_Evaluator(DatasetEvaluator):
                 net_cfg = cfg.MODEL.POSE_NET
                 crop_res = net_cfg.OUTPUT_RES
 
+                history = []
                 for _ in range(cfg.TEST.DEPTH_REFINE_ITER):
+                    vis = {}
                     self.ren.clear()
                     self.ren.set_cam(K_crop)
                     self.ren.draw_model(self.ren_models[self.data_ref.objects.index(cls_name)], pose_est)
                     ren_im, ren_dp = self.ren.finish()
+
+                    vis["depth_sensor"] = depth_sensor_crop
+                    vis["depth_render"] = ren_dp
+                    vis["vis mask"] = mask_i
                     ren_mask = ren_dp > 0
 
                     if self.cfg.TEST.USE_COOR_Z_REFINE:
@@ -538,19 +545,25 @@ class GDRN_Evaluator(DatasetEvaluator):
                         query_img_norm = query_img_norm * ren_mask * depth_sensor_mask_crop
                     else:
                         query_img = xyz_i
+                        vis["xyz"] = (xyz_i * mask_i[:, :, None]).clip(0, 1.0)
 
                         query_img_norm = torch.norm(query_img, dim=-1) * mask_i
                         query_img_norm = query_img_norm.numpy() * ren_mask * depth_sensor_mask_crop
+                        vis["query_img_norm"] = query_img_norm
                     norm_sum = query_img_norm.sum()
                     if norm_sum == 0:
                         continue
                     query_img_norm /= norm_sum
                     norm_mask = query_img_norm > (query_img_norm.max() * self.depth_refine_threshold)
+                    vis["norm_mask"] = norm_mask
                     yy, xx = np.argwhere(norm_mask).T  # 2 x (N,)
                     depth_diff = depth_sensor_crop[yy, xx] - ren_dp[yy, xx]
+                    vis["depth_diff"] = np.abs(depth_sensor_crop - ren_dp) * norm_mask
+
+                    # print(np.abs(depth_sensor_crop - ren_dp).max())
+                    # print(depth_sensor_crop.max(), ren_dp.max())
+
                     depth_adjustment = np.median(depth_diff)
-
-
 
                     yx_coords = np.meshgrid(np.arange(crop_res), np.arange(crop_res))
                     yx_coords = np.stack(yx_coords[::-1], axis=-1)  # (crop_res, crop_res, 2yx)
@@ -561,6 +574,24 @@ class GDRN_Evaluator(DatasetEvaluator):
                     trans_delta = ray_3d[:, None] * depth_adjustment
                     trans_est = trans_est + trans_delta.reshape(3)
                     pose_est = np.hstack([rot_est, trans_est.reshape(3, 1)])
+                    history.append(vis)
+
+                # show history
+                # fig, axs = plt.subplots(
+                #     len(history),
+                #     len(history[0]),
+                #     figsize=(len(history[0]) * 5, 5 * len(history)),
+                # )
+                # for j in range(len(history)):
+                #     vis = history[j]
+                #     for k, (name, img) in enumerate(vis.items()):
+                #         axs[j, k].imshow(img)
+                #         axs[j, k].set_title(name)
+                # fig.tight_layout()
+                # plt.savefig(f"output/depth_refine.png")
+                # plt.close()
+                # print(_input["scene_im_id"], _input["image_id"], _input["inst_id"])
+                # exit()
 
                 json_results.extend(
                     self.pose_prediction_to_json(
@@ -1107,7 +1138,8 @@ def gdrn_save_result_of_dataset(cfg, model, data_loader, output_dir, dataset_nam
                         show_ims = [_v for _k, _v in vis_dict.items()]
                         ncol = 2
                         nrow = int(np.ceil(len(show_ims) / ncol))
-                        grid_show(show_ims, show_titles, row=nrow, col=ncol)
+                        # print(f"{output_dir}/vis/{cur_obj_id}/{scene_im_id}_{i_inst}.png")
+                        # grid_show(show_ims, show_titles, row=nrow, col=ncol, save_path=f"{output_dir}/vis/{cur_obj_id}/{scene_im_id}_{i_inst}.png", show=False)
                     # end vis ----------------------------------------------------------------------
 
             # -----------------------------------------------------------------------------------------
