@@ -10,10 +10,29 @@ import mmcv
 from matplotlib.pyplot import axvline
 from matplotlib.pyplot import MultipleLocator
 import platform
+import pandas as pd
 
 cur_dir = osp.dirname(osp.abspath(__file__))
 sys.path.insert(0, osp.join(cur_dir, "../../../../"))
 from lib.vis_utils.colormap import colormap
+
+
+def read_rpnp_data(filename="./error_curve.csv"):
+    # read csv
+    df = pd.read_csv(filename, delimiter=",")
+    # print(df)
+    # filter outlier=0.1
+    df_10 = df[df["outlier"] == 0.1]
+    # filter outlier=0.3
+    df_30 = df[df["outlier"] == 0.3]
+
+    # order by noise_sigma
+    df_10 = df_10.sort_values(by="noise_sigma")
+    df_30 = df_30.sort_values(by="noise_sigma")
+
+    # get err_3d_5 values
+    return df_10["err_3d_5"].values, df_30["err_3d_5"].values
+
 
 _COLORS = colormap(rgb=True, maximum=1)
 
@@ -31,6 +50,8 @@ end = -3
 # xlim = [0, 0.062]
 xlim = [0.006, 0.054]
 
+rpnp_add_rel_errors_outlier_10, rpnp_add_rel_errors_outlier_30 = read_rpnp_data()
+
 # yapf: disable
 noise_sigmas              = [
     0     , 0.002 , 0.004 , 0.006 , 0.008 , 0.01  , 0.012 , 0.014 , 0.016 , 0.018 , \
@@ -40,6 +61,8 @@ cpnp_add_rel_errors_outlier_10 = [
     0.0160, 0.0157, 0.0157, 0.0163, 0.0164, 0.0160, 0.0162, 0.0161, 0.0158, 0.0161, \
     0.0164, 0.0162, 0.0161, 0.0163, 0.0164, 0.0163, 0.0165, 0.0164, 0.0166, 0.0168, \
     0.0169, 0.0174, 0.0171, 0.0174, 0.0174, 0.0178, 0.0182, 0.0183, 0.0187, 0.0189, 0.0193][start:end]
+rpnp_add_rel_errors_outlier_10 = rpnp_add_rel_errors_outlier_10[start:end]
+
 ransanc_pnp_add_rel_errors_outlier_10 = [
     0.0128, 0.0126, 0.0118, 0.0115, 0.0141, 0.0200, 0.0274, 0.0356, 0.0454, 0.0561, \
     0.0672, 0.0819, 0.0946, 0.1036, 0.1162, 0.1300, 0.1443, 0.1590, 0.1805, 0.1933, \
@@ -59,6 +82,8 @@ cpnp_add_rel_errors_outlier_30 = [
     0.0269, 0.0264, 0.0265, 0.0262, 0.0261, 0.0260, 0.0261, 0.0255, 0.0262, 0.0260, \
     0.0269, 0.0260, 0.0268, 0.0266, 0.0266, 0.0264, 0.0269, 0.0269, 0.0267, 0.0268, \
     0.0271, 0.0271, 0.0278, 0.0275, 0.0282, 0.0277, 0.0279, 0.0282, 0.0287, 0.0287, 0.0291][start:end]
+rpnp_add_rel_errors_outlier_30 = rpnp_add_rel_errors_outlier_30[start:end]
+
 ransanc_pnp_add_rel_errors_outlier_30 = [
     0.0129, 0.0126, 0.0119, 0.0116, 0.0146, 0.0215, 0.0309, 0.0457, 0.0604, 0.0744, \
     0.0891, 0.1027, 0.1192, 0.1341, 0.1471, 0.1620, 0.1787, 0.1961, 0.2047, 0.2294, \
@@ -124,8 +149,22 @@ def main_10():
         color=(0, 112 / 255.0, 68 / 255.0),
         clip_on=False,
     )
-    handles = [h1, h2, h3]
-    labels = ["RANSAC EP$\mathit{n}$P", "Single-Stage", "Ours"]
+
+    plot_i += 5
+    (h4,) = plt.plot(
+        noise_sigmas,
+        rpnp_add_rel_errors_outlier_10,
+        # "-",
+        marker="*",
+        markersize=marker_size,
+        markerfacecolor="none",
+        label="Patch-PnP",
+        linewidth=linewidth,
+        color="#A68CC4",
+        clip_on=False,
+    )
+    handles = [h1, h2, h3, h4]
+    labels = ["RANSAC EP$\mathit{n}$P", "Single-Stage", "Patch-PnP", "Ours"]
     plt.legend(
         handles,
         labels,
@@ -145,7 +184,7 @@ def main_10():
     ax.set_xlabel("noise level $\sigma$ (outlier=10%)", fontsize=font_size)
     ax.set_ylabel("pose error", fontsize=font_size)
 
-    ax.set_yticks([0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4])
+    ax.set_yticks([0.003, 0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4])
     ax.get_yaxis().set_major_formatter(ticker.ScalarFormatter())
 
     ax.xaxis.set_tick_params(labelsize=font_size)
@@ -198,13 +237,25 @@ def main_30():
         marker="d",
         markersize=marker_size,
         markerfacecolor="none",
-        label="Ours",
+        label="Patch-PnP",
         linewidth=linewidth,
         color=(0, 112 / 255.0, 68 / 255.0),
         clip_on=False,
     )
-    handles = [h1, h2, h3]
-    labels = ["RANSAC EP$\mathit{n}$P", "Single-Stage", "Ours"]
+    (h4,) = plt.plot(
+        noise_sigmas,
+        rpnp_add_rel_errors_outlier_30,
+        # "--",
+        marker="*",
+        markersize=marker_size,
+        markerfacecolor="none",
+        label="Ours",
+        linewidth=linewidth,
+        color="#A68CC4",
+        clip_on=False,
+    )
+    handles = [h1, h2, h3, h4]
+    labels = ["RANSAC EP$\mathit{n}$P", "Single-Stage", "Patch-PnP", "Ours"]
     plt.legend(
         handles,
         labels,
@@ -224,7 +275,7 @@ def main_30():
     ax.set_xlabel("noise level $\sigma$ (outlier=30%)", fontsize=font_size)
     ax.set_ylabel("pose error", fontsize=font_size)
 
-    ax.set_yticks([0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4])
+    ax.set_yticks([0.005, 0.01, 0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4])
     ax.get_yaxis().set_major_formatter(ticker.ScalarFormatter())
 
     ax.xaxis.set_tick_params(labelsize=font_size)
